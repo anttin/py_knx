@@ -180,7 +180,7 @@ def telegram_decoder(target=None):
         buf = bytearray()
 
 
-def write(writer, addr, value):
+def write(writer, addr, value, value_fmt=None):
     """ send a KNXWRITE request to the given group addr
 
     :param writer:
@@ -193,7 +193,11 @@ def write(writer, addr, value):
         Might be a GroupAddress named tuple or string. E.g. '0/1/14'
 
     :param value:
-        The value to sent. Either 1 or 0
+        The value to send.
+
+    :param value_fmt:
+        The format character of value for struct.pact. If None (default),
+        then data length maximum of 6 bits is assumed.
 
     """
 
@@ -201,8 +205,10 @@ def write(writer, addr, value):
         addr = encode_ga(addr)
     if isinstance(value, str):
         value = int(value)
-    writer.write(
-        encode_data('HHBB', [EIB_GROUP_PACKET, addr, 0, KNXWRITE | value]))
+    if value_fmt:
+      writer.write(encode_data('HHBB'+value_fmt, [EIB_GROUP_PACKET, addr, 0, KNXWRITE, value]))
+    else:
+      writer.write(encode_data('HHBB', [EIB_GROUP_PACKET, addr, 0, KNXWRITE | value]))
 
 
 def read(writer, addr):
@@ -281,10 +287,10 @@ class Connection:
         self.socket = s
         self.writer = SocketWriterAdapter(s)
 
-    def write(self, addr, value):
+    def write(self, addr, value, value_fmt=None):
         """ write to the given group address, see :func:`~knx.write`"""
 
-        write(self.writer, addr, value)
+        write(self.writer, addr, value, value_fmt)
 
     def read(self, addr):
         """ Calls :func:`knx.read` using the connections writer. """

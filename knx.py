@@ -16,7 +16,7 @@ KNXREAD = 0x00
 
 
 GroupAddress = namedtuple('GroupAddress', ['main', 'middle', 'sub'])
-Telegram = namedtuple('Telegram', ['src', 'dst', 'value'])
+Telegram = namedtuple('Telegram', ['src', 'dst', 'value', 'read_request'])
 
 
 def encode_ga(addr):
@@ -115,10 +115,10 @@ def _decode(buf):
     bytestring.
 
     >>> _decode(bytearray([0x11, 0xFE, 0x00, 0x07, 0x00, 0x83]))
-    Telegram(src='1.1.254', dst='0/0/7', value=3)
+    Telegram(src='1.1.254', dst='0/0/7', value=3, read_request=False)
 
     >>> _decode(bytearray([0x11, 0x08, 0x00, 0x14, 0x00, 0x81]))
-    Telegram(src='1.1.8', dst='0/0/20', value=1)
+    Telegram(src='1.1.8', dst='0/0/20', value=1, read_request=False)
 
     """
     src = decode_ia(buf[0] << 8 | buf[1])
@@ -134,7 +134,7 @@ def _decode(buf):
     else:
         value = data[1:]
 
-    return Telegram(src, dst, value)
+    return Telegram(src, dst, value, (flg == KNXREAD))
 
 
 @coroutine
@@ -226,8 +226,8 @@ def read(writer, addr):
 
     Will cause the knx listener to retrieve 2 telegrams:
 
-    Telegram(src='0/0/0', dst='0/0/20', value=-1)
-    Telegram(src='2/1/1', dst='0/0/20', value='1')
+    Telegram(src='0/0/0', dst='0/0/20', value=-1, read_request=True)
+    Telegram(src='2/1/1', dst='0/0/20', value='1', read_request=False)
 
     """
     if isinstance(addr, (str, GroupAddress)):

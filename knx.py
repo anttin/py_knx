@@ -206,7 +206,11 @@ def write(writer, addr, value, value_fmt=None):
     if isinstance(value, str):
         value = int(value)
     if value_fmt:
-      writer.write(encode_data('HHBB'+value_fmt, [EIB_GROUP_PACKET, addr, 0, KNXWRITE, value]))
+      if isinstance(value, (str, list, bytes)):
+        _value = list(value)
+      else:
+        _value = [value]
+      writer.write(encode_data('HHBB'+value_fmt, [EIB_GROUP_PACKET, addr, 0, KNXWRITE] + _value))
     else:
       writer.write(encode_data('HHBB', [EIB_GROUP_PACKET, addr, 0, KNXWRITE | value]))
 

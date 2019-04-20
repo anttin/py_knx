@@ -244,8 +244,11 @@ def read(writer, addr):
 def listen(reader, receiver, decoder=telegram_decoder):
     decoder = decoder(receiver)
     while True:
-        data = yield from reader.read(100)
-        decoder.send(data)
+        try:
+          data = yield from reader.read(100)
+          decoder.send(data)
+        except StopIteration:
+          return
 
 
 @aio.coroutine
